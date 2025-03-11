@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from .data import load_dataframes
 from .models import compare_models_w_hpo
-from .constants import OUTPUT_PATH, features_minmax, features_no_scaling, features_perc, features_robust, features_standard
+from .constants import OUTPUT_PATH, features_minmax, features_no_scaling, features_perc, features_robust, features_standard, excluded_columns
 
 
 filename = 'data.csv'
@@ -23,10 +23,11 @@ if __name__ == '__main__' :
                                                                                     features_no_scaling = features_no_scaling, 
                                                                                     team = None,
                                                                                     season = None,
-                                                                                    league = None)
+                                                                                    league = None,
+                                                                                    excluded_columns=excluded_columns)
     c_df = compare_models_w_hpo(X_train, y_train, X_val, y_val, X_test, y_test, 
                                 cv = 0, 
                                 n_iter_ml = n_iter_ml, 
                                 n_iter_ann= n_iter_ann)
-    path = os.path.join(output_path, filename)
+    path = os.path.join(OUTPUT_PATH, 'model_comparison.csv')
     c_df.to_csv(path)
