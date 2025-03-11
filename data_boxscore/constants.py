@@ -1,7 +1,7 @@
 OUTPUT_PATH = './outputs/'
 DATA_PATH = './raw_data/'
 
-excluded_columns = []
+excluded_columns = ['diff_score']
 
 features_standard = []
 

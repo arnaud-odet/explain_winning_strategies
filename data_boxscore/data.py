@@ -116,6 +116,9 @@ def load_dataframes(filename:str,
     if 'split' not in gdf.columns and (len(split) != 4 or sum(split) != 1) :
         raise ValueError('Please specify a split column if your game dataframe or a split tupe with 4 values (elo_ignored_games_share, train_share, val_share, test_share) summing to 1')
     
+    if 'home_win' not in gdf.columns and 'diff_score' in gdf.columns :
+        gdf['home_win'] = (gdf['diff_score'] > 0).astype('int')
+    
     X_train, y_train, X_val, y_val, X_test, y_test, X_query, y_query = prepare_dataset(gdf, 
                                                                                     features_standard = features_standard, 
                                                                                     features_minmax = features_minmax, 
