@@ -13,6 +13,7 @@ pip install -r requirements.txt
 ```
 3. **Modify your dataset** so it contains the following columns :
 * `home_team` and `away_team` : unique identifiers for home and away team respectively,
+* features related to the home (away) team must be preceded by `home_` (`away_`),
 * either a binary `home_win` or a `diff_score` (computed as home score - away score, mandatory for ELO computation),
 * optionally, a `split` with the following values :
   * 0 for game set aside for ELO initialization,
