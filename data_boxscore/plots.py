@@ -4,11 +4,21 @@ import matplotlib.pyplot as plt
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 
-def create_spider_chart(categories, values, title='Spider Chart', color='blue', 
-                                ax=None, min_value=None, max_value=None, graduation_levels=5, 
-                                highlight_level=None, highlight_color='red',
-                                highlight_linewidth=2, highlight_linestyle='--',
-                                category_colors=None, display_legend:bool=False):
+def create_spider_chart(categories, 
+                        values, 
+                        std_devs=None,
+                        title='Spider Chart', 
+                        color='blue', 
+                        ax=None, 
+                        min_value=None, 
+                        max_value=None, 
+                        graduation_levels=5, 
+                        highlight_level=None, 
+                        highlight_color='red',
+                        highlight_linewidth=2, 
+                        highlight_linestyle='--',
+                        category_colors=None, 
+                        display_legend:bool=False):
     """
     Creates an enhanced spider/radar chart with custom graduations, support for negative values,
     and colored category labels.
@@ -106,7 +116,34 @@ def create_spider_chart(categories, values, title='Spider Chart', color='blue',
     
     # Draw axis lines with category-specific colors
     for i, angle in enumerate(angles):
-        ax.plot([angle, angle], [0, range_value], linewidth=1.0, color=category_colors[i], alpha=0.7)
+        # If we have standard deviations, draw axis line as dashed
+        if std_devs is not None:
+            ax.plot([angle, angle], [0, range_value], linewidth=0.8, 
+                   linestyle='--', color=category_colors[i], alpha=0.7)
+        else:
+            # Regular solid axis line when no std_devs
+            ax.plot([angle, angle], [0, range_value], linewidth=1.0, 
+                   color=category_colors[i], alpha=0.7)
+    
+    # Add standard deviation ranges if provided
+    if std_devs is not None:
+        for i, (angle, value, sd, cat_color) in enumerate(zip(angles, values, std_devs, category_colors)):
+            # Transform to chart scale
+            value_transformed = value - min_value
+            
+            # Calculate lower and upper bounds with SD
+            lower_bound = max(0, value_transformed - sd)
+            upper_bound = min(range_value, value_transformed + sd)
+            
+            # Draw the SD range as a thicker solid line
+            ax.plot([angle, angle], [lower_bound, upper_bound], 
+                   linewidth=2.5, linestyle='-', color=cat_color, alpha=0.8)
+            
+            # Add small horizontal lines at the ends of the SD range for better visibility
+            marker_length = 0.1  # in radians
+            for bound in [lower_bound, upper_bound]:
+                ax.plot([angle - marker_length/2, angle + marker_length/2], [bound, bound],
+                       linewidth=1.5, color=cat_color, alpha=0.8)
     
     # Make the plot circular by repeating the first value
     values_transformed_closed = np.append(values_transformed, values_transformed[0])

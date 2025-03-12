@@ -39,3 +39,7 @@ pip install -r requirements.txt
 ### Citation
 
 <span style= 'color:orange'>to be added </span>
+
+### Data availability
+
+The data cannot be directly uploaded to an open platform due to contractual agreements with AIA Enterprise.
