@@ -15,10 +15,7 @@ def create_spider_chart(categories,
                         graduation_levels=5, 
                         highlight_level=None, 
                         highlight_color='red',
-                        highlight_linewidth=2, 
-                        highlight_linestyle='--',
-                        category_colors=None, 
-                        display_legend:bool=False):
+                        category_colors=None):
     """
     Creates an enhanced spider/radar chart with custom graduations, support for negative values,
     and colored category labels.
@@ -58,9 +55,9 @@ def create_spider_chart(categories,
     """
     # If no axes provided, create a new figure
     if ax is None:
-        fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
+        fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True));
     else:
-        fig = plt.gcf()
+        fig = plt.gcf();
         
     # Number of variables
     N = len(categories)
@@ -94,26 +91,39 @@ def create_spider_chart(categories,
     graduation_values_transformed = graduation_values_original - min_value
     
     # Display graduation values (original values, not transformed)
-    ax.set_rticks(graduation_values_transformed)
+    step_size = range_value / (graduation_levels+1)
+    ax.set_rticks(graduation_values_transformed - [step_size/graduation_levels*i for i in range(len(graduation_values_transformed))])
     ax.set_yticklabels([f"{v:.2f}" for v in graduation_values_original], fontsize=8)
     
-    # Draw polygons for each graduation level
-    for level_original, level_transformed in zip(graduation_values_original, graduation_values_transformed):
-        # Check if this level should be highlighted
-        if highlight_level is not None and np.isclose(level_original, highlight_level):
-            ax.plot(angles, [level_transformed] * len(angles), linewidth=highlight_linewidth, 
-                   linestyle=highlight_linestyle, color=highlight_color)
-            # Connect points to form a polygon
-            for i in range(N):
-                ax.plot([angles[i], angles[(i+1) % N]], [level_transformed, level_transformed], 
-                        linewidth=highlight_linewidth, linestyle=highlight_linestyle, 
-                        color=highlight_color)
-        else:
-            # Connect points to form a polygon (not using fill to keep it transparent)
-            for i in range(N):
-                ax.plot([angles[i], angles[(i+1) % N]], [level_transformed, level_transformed], 
-                        linewidth=0.7, linestyle='-', color='gray', alpha=0.5)
     
+    # Draw polygons for each graduation level
+    for  level_transformed in graduation_values_transformed:
+        # Connect points to form a polygon
+        for i in range(N):
+            ax.plot([angles[i], angles[(i+1) % N]], [level_transformed, level_transformed], 
+                    linewidth=0.7, linestyle='-', color='gray', alpha=0.5)
+
+    # Add a special line for zero if min_value is negative
+    if min_value < 0 and 0 < max_value and highlight_level !=0:
+        zero_level = 0 - min_value  # Transform zero to the chart's scale
+        ax.plot(angles, [zero_level] * len(angles), linewidth=1.5, 
+               linestyle='-', color='black', alpha=0.7)
+        # Connect points to form a polygon
+        for i in range(N):
+            ax.plot([angles[i], angles[(i+1) % N]], [zero_level, zero_level], 
+                    linewidth=1.0, linestyle='-', color='black', alpha=0.7)
+    
+    # Highlight the specidifed level
+    if highlight_level is not None :
+        transformed_highltight_level = highlight_level - min_value
+        ax.plot(angles, [transformed_highltight_level] * len(angles), linewidth=2, 
+                linestyle='--', color=highlight_color)
+        # Connect points to form a polygon
+        for i in range(N):
+            ax.plot([angles[i], angles[(i+1) % N]], [transformed_highltight_level, transformed_highltight_level], 
+                    linewidth=2, linestyle='--', 
+                    color=highlight_color)
+
     # Draw axis lines with category-specific colors
     for i, angle in enumerate(angles):
         # If we have standard deviations, draw axis line as dashed
@@ -137,13 +147,13 @@ def create_spider_chart(categories,
             
             # Draw the SD range as a thicker solid line
             ax.plot([angle, angle], [lower_bound, upper_bound], 
-                   linewidth=2.5, linestyle='-', color=cat_color, alpha=0.8)
+                   linewidth=2.5, linestyle='-', color='black', alpha=0.8)
             
             # Add small horizontal lines at the ends of the SD range for better visibility
             marker_length = 0.1  # in radians
             for bound in [lower_bound, upper_bound]:
                 ax.plot([angle - marker_length/2, angle + marker_length/2], [bound, bound],
-                       linewidth=1.5, color=cat_color, alpha=0.8)
+                       linewidth=1.5, color='black', alpha=0.8)
     
     # Make the plot circular by repeating the first value
     values_transformed_closed = np.append(values_transformed, values_transformed[0])
@@ -153,15 +163,6 @@ def create_spider_chart(categories,
     ax.plot(angles_closed, values_transformed_closed, 'o-', linewidth=2, color=color, label=title)
     ax.fill(angles_closed, values_transformed_closed, alpha=0.25, color=color)
     
-    # Add a special line for zero if min_value is negative
-    if min_value < 0 and 0 < max_value:
-        zero_level = 0 - min_value  # Transform zero to the chart's scale
-        ax.plot(angles, [zero_level] * len(angles), linewidth=1.5, 
-               linestyle='-', color='black', alpha=0.7)
-        # Connect points to form a polygon
-        for i in range(N):
-            ax.plot([angles[i], angles[(i+1) % N]], [zero_level, zero_level], 
-                    linewidth=1.0, linestyle='-', color='black', alpha=0.7)
     
     # Set category labels with custom colors
     ax.set_xticks(angles)
@@ -172,7 +173,7 @@ def create_spider_chart(categories,
     # Add colored category labels manually
     for i, (angle, category, cat_color) in enumerate(zip(angles, categories, category_colors)):
         # Calculate the position for the label (slightly outside the circle)
-        label_distance = 1.02 * range_value  # 15% outside the max radius
+        label_distance = 1.02 * range_value
         ha = 'center'  
         va = 'center'
         ax.text(angle, label_distance, category, color=cat_color, 
@@ -180,10 +181,9 @@ def create_spider_chart(categories,
     
     # Remove default grid
     ax.grid(False)
+    ax.spines['polar'].set_visible(False)
     
     # Add title and legend
-    ax.set_title(title, size=15, pad=15)
-    if display_legend:
-        ax.legend(loc='upper right')
+    ax.set_title(title, size=15, pad=15);
     
     return fig, ax
